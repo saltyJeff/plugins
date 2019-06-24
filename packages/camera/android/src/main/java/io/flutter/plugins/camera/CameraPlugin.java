@@ -252,6 +252,8 @@ public class CameraPlugin implements MethodCallHandler {
     private boolean recordingVideo;
     private boolean enableAudio;
 
+    private String resolutionPreset;
+
     Camera(
         final String cameraName,
         final String resolutionPreset,
@@ -260,6 +262,7 @@ public class CameraPlugin implements MethodCallHandler {
 
       this.cameraName = cameraName;
       this.enableAudio = enableAudio;
+      this.resolutionPreset = resolutionPreset;
       textureEntry = view.createSurfaceTexture();
 
       registerEventChannel();
@@ -450,9 +453,23 @@ public class CameraPlugin implements MethodCallHandler {
       mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
       if (enableAudio) mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
       mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-      mediaRecorder.setVideoEncodingBitRate(1024 * 1000);
       if (enableAudio) mediaRecorder.setAudioSamplingRate(16000);
-      mediaRecorder.setVideoFrameRate(27);
+
+      switch (resolutionPreset) { //i have no idea how to calculate these
+          case "high":
+            mediaRecorder.setVideoEncodingBitRate(Integer.MAX_VALUE);
+            mediaRecorder.setVideoFrameRate(60);
+            break;
+          case "medium":
+            mediaRecorder.setVideoEncodingBitRate(8 * 1024 * 1000);
+            mediaRecorder.setVideoFrameRate(60);
+          case "low":
+            mediaRecorder.setVideoEncodingBitRate(1024 * 1000);
+            mediaRecorder.setVideoFrameRate(27);
+            break;
+          default:
+            throw new IllegalArgumentException("Unknown preset: " + resolutionPreset);
+      }
       mediaRecorder.setVideoSize(videoSize.getWidth(), videoSize.getHeight());
       mediaRecorder.setOutputFile(outputFilePath);
       mediaRecorder.setOrientationHint(getMediaOrientation());
